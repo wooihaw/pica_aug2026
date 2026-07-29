@@ -247,7 +247,7 @@ uv add "pyvisa>=1.14" "pyvisa-py>=0.7.2"
 ```
 
 ```powershell
-uv add "flet==0.28.3"
+uv add "flet[all]==0.28.3"
 ```
 
 ```powershell
@@ -337,7 +337,7 @@ Everything from then on starts with `uv run`, for example
 | Jupyter's `sys.executable` points outside `.venv` | You launched Jupyter from somewhere else. Close it, `cd` to the project folder, and use `uv run jupyter lab`. |
 | Anaconda seems to interfere | It should not — `uv run` ignores any active conda environment. If in doubt, open a plain PowerShell rather than an Anaconda Prompt. |
 | Path-too-long errors | Your folder is nested too deep. The lab must be at `C:\Users\<you>\python_venv\pica-lab`, not inside further sub-folders. |
-| Everything is broken and you want to restart | `cd $HOME\python_venv`, then `rmdir /s /q pica-lab`, then start again from Step 5. |
+| Everything is broken and you want to restart | `cd $HOME\python_venv`, then `rmdir pica-lab -r -fo`, then start again from Step 5. |
 
 ---
 
