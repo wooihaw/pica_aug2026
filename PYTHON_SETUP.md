@@ -14,7 +14,6 @@ C:\Users\<you>\python_venv\           <- folder for Python projects
         .venv\                        <- the virtual environment
         pyproject.toml                <- what the lab needs
         uv.lock                       <- exact versions
-        check_setup.py                <- the verification script
         ... the rest of the lab files
 ```
 
@@ -88,9 +87,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 In the new PowerShell, go back to the folder:
 
 ```powershell
-cd $HOME
-md python_venv
-cd python_venv
+cd $HOME\python_venv
 ```
 
 ### Check
