@@ -244,6 +244,10 @@ uv add "pyvisa>=1.14" "pyvisa-py>=0.7.2"
 ```
 
 ```powershell
+uv add "pysimplegui>=6"
+```
+
+```powershell
 uv add "flet[all]==0.28.3"
 ```
 
