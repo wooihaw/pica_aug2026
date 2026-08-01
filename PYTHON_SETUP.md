@@ -237,7 +237,7 @@ Expect `Python 3.13.x`.
 
 ## Step 9 — Install the dependencies
 
-Run these four commands one at a time, waiting for each to finish.
+Run these five commands one at a time, waiting for each to finish.
 
 ```powershell
 uv add "pyvisa>=1.14" "pyvisa-py>=0.7.2"
@@ -248,7 +248,7 @@ uv add "pysimplegui>=6"
 ```
 
 ```powershell
-uv add "flet[all]==0.28.3"
+uv add "pyserial>=3.5"
 ```
 
 ```powershell
