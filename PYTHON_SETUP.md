@@ -269,7 +269,7 @@ they take the longest.
 ### Check
 
 ```powershell
-uv run python -c "import pyvisa, numpy, pandas, matplotlib, flet; print('all imports OK')"
+uv run python -c "import pyvisa, numpy, pandas, matplotlib, serial, PySimpleGUI; print('all imports OK')"
 ```
 
 Expect `all imports OK`.
@@ -294,7 +294,7 @@ In Jupyter Lab:
 2. Type this into the first cell and press **Shift + Enter**:
 
 ```python
-import sys, pyvisa, numpy, pandas, matplotlib
+import sys, pyvisa, serial, numpy, pandas, matplotlib
 print(sys.executable)
 print("Jupyter is using the project environment")
 ```
@@ -347,7 +347,6 @@ Everything from then on starts with `uv run`, for example
 | Command | What it does |
 |---|---|
 | `cd $HOME\python_venv\pica-lab` | Go to the lab folder |
-| `uv run python check_setup.py` | Re-check the environment |
 | `uv run jupyter lab` | Start Jupyter Lab |
 | `uv run python <file>.py` | Run any script in the environment |
 | `uv sync` | Reinstall everything from `uv.lock` |
