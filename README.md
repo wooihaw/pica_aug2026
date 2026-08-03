@@ -108,7 +108,6 @@ All files live in `data/`.
 | `noisy_signal.csv` | Time and a noisy signal, 201 samples. For filtering and smoothing practice. |
 | `scope_0.csv` | A two-channel capture exported by a real oscilloscope, with the header rows the instrument writes. 2000 samples. |
 | `waveform_data.csv` | Time and voltage for a waveform downloaded over PyVISA, ~10,000 samples. Used in Exercise 7. |
-| `waveform_data_new.csv` | Written by `PyVISA_Scope.ipynb` when you download a waveform yourself. Not in the repository until you run the notebook. |
 
 ## Working through the material
 
