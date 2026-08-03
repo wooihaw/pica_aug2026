@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python for Instrument Control and Automation</title>
+<meta name="description" content="A 2-day hands-on training on using Python to compute, visualise and analyse measurement data, build instrument front panels, and drive bench instruments over serial and VISA.">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#131a23; --panel2:#171f2a; --line:#243040;
+    --ink:#e6edf3; --dim:#9aa7b6; --faint:#6d7b8d;
+    --trace:#ffd400; --accent:#4aa8ff; --green:#3fd07f;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px}
+
+  /* ---------- header ---------- */
+  header{
+    position:relative; overflow:hidden;
+    border-bottom:1px solid var(--line);
+    background:
+      linear-gradient(180deg,rgba(74,168,255,.07),transparent 60%),
+      var(--panel);
+  }
+  .grid-bg{
+    position:absolute; inset:0; opacity:.5;
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:64px 48px;
+    mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent);
+    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent);
+  }
+  header .wrap{position:relative; padding-top:56px; padding-bottom:44px}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--trace); margin:0 0 14px;
+  }
+  h1{
+    margin:0 0 14px; font-size:clamp(30px,5vw,46px); line-height:1.12;
+    letter-spacing:-.02em; font-weight:700;
+  }
+  .lede{max-width:62ch; color:var(--dim); font-size:18px; margin:0 0 8px}
+  .trace{display:block; width:100%; height:56px; margin:22px 0 26px}
+  .btns{display:flex; flex-wrap:wrap; gap:12px}
+  .btn{
+    display:inline-block; padding:11px 20px; border-radius:8px;
+    font-size:15px; font-weight:600; border:1px solid var(--line);
+    color:var(--ink); background:var(--panel2); transition:.15s;
+  }
+  .btn:hover{text-decoration:none; border-color:var(--accent); transform:translateY(-1px)}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:#04121f}
+  .btn-primary:hover{background:#68b6ff; border-color:#68b6ff}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0; border-bottom:1px solid var(--line)}
+  h2{
+    margin:0 0 6px; font-size:26px; letter-spacing:-.01em;
+    display:flex; align-items:baseline; gap:12px;
+  }
+  h2 .num{font-family:var(--mono); font-size:14px; color:var(--trace); font-weight:400}
+  .sub{color:var(--dim); margin:0 0 26px; max-width:70ch}
+  h3{margin:30px 0 12px; font-size:18px}
+
+  /* ---------- outcomes ---------- */
+  ol.outcomes{list-style:none; counter-reset:o; margin:0; padding:0;
+    display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  ol.outcomes li{
+    counter-increment:o; position:relative; padding:16px 18px 16px 52px;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    font-size:15px; color:var(--dim);
+  }
+  ol.outcomes li::before{
+    content:counter(o); position:absolute; left:16px; top:15px;
+    width:24px; height:24px; border-radius:6px; background:var(--panel2);
+    border:1px solid var(--line); color:var(--trace);
+    font-family:var(--mono); font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- day cards ---------- */
+  .days{display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .day{background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .day header{background:var(--panel2); border:0; border-bottom:1px solid var(--line); padding:16px 20px}
+  .day header .tag{font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--trace)}
+  .day header .ttl{font-size:17px; font-weight:600; margin-top:3px}
+  .day ul{list-style:none; margin:0; padding:8px 20px 18px}
+  .day li{padding:10px 0; border-bottom:1px dashed var(--line); font-size:15px}
+  .day li:last-child{border-bottom:0}
+  .day li .topic{display:block; color:var(--ink)}
+  .day li .files{display:block; margin-top:3px; font-family:var(--mono); font-size:12.5px; color:var(--faint)}
+  .day li .files a{color:var(--dim)}
+
+  /* ---------- tables ---------- */
+  .tbl{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:15px;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  .tbl th{
+    text-align:left; padding:11px 16px; background:var(--panel2);
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
+    font-weight:600; border-bottom:1px solid var(--line);
+  }
+  .tbl td{padding:13px 16px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--dim)}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl td:first-child{white-space:nowrap; width:1%}
+  .tbl code, code{font-family:var(--mono); font-size:13.5px}
+  td code a{color:var(--ink)}
+  .tbl td:first-child code{color:var(--ink)}
+
+  /* ---------- misc ---------- */
+  pre{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono);
+    font-size:13.5px; color:var(--ink); line-height:1.5;
+  }
+  pre .c{color:var(--faint)}
+  .note{
+    border-left:3px solid var(--trace); background:var(--panel);
+    padding:14px 18px; border-radius:0 8px 8px 0; color:var(--dim);
+    font-size:15px; margin:22px 0;
+  }
+  .note strong{color:var(--ink)}
+  .steps{counter-reset:s; list-style:none; padding:0; margin:0}
+  .steps li{
+    counter-increment:s; position:relative; padding-left:40px; margin-bottom:20px; color:var(--dim);
+  }
+  .steps li::before{
+    content:counter(s); position:absolute; left:0; top:0;
+    width:26px; height:26px; border-radius:50%;
+    background:var(--panel2); border:1px solid var(--line); color:var(--green);
+    font-family:var(--mono); font-size:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .steps li b{color:var(--ink); font-weight:600}
+  .pills{display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 0}
+  .pill{
+    font-family:var(--mono); font-size:12.5px; padding:5px 11px;
+    background:var(--panel2); border:1px solid var(--line);
+    border-radius:20px; color:var(--dim);
+  }
+  footer{padding:36px 0 56px; color:var(--faint); font-size:14px}
+  footer a{color:var(--dim)}
+  @media (max-width:640px){
+    section{padding:40px 0}
+    .tbl td:first-child{white-space:normal}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <p class="eyebrow">2-day hands-on training</p>
+    <h1>Python for Instrument Control and Automation</h1>
+    <p class="lede">
+      Use Python to compute, visualise and analyse measurement data, build simple
+      instrument front panels, and drive bench instruments over serial and VISA.
+    </p>
+
+    <svg class="trace" viewBox="0 0 900 56" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,28 C30,28 30,6 60,6 C90,6 90,50 120,50 C150,50 150,6 180,6
+               C210,6 210,50 240,50 C270,50 270,28 300,28
+               L340,28 L350,8 L360,48 L370,14 L380,42 L390,28
+               L420,28 C450,28 450,10 480,10 C510,10 510,46 540,46
+               C570,46 570,10 600,10 C630,10 630,46 660,46 C690,46 690,28 720,28
+               L900,28"
+            fill="none" stroke="var(--trace)" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+    </svg>
+
+    <div class="btns">
+      <a class="btn btn-primary" href="https://github.com/wooihaw/pica_aug2026">View on GitHub</a>
+      <a class="btn" href="https://github.com/wooihaw/pica_aug2026/archive/refs/heads/main.zip">Download ZIP</a>
+      <a class="btn" href="#setup">Setup guide</a>
+    </div>
+  </div>
+</header>
+
+<section id="about">
+  <div class="wrap">
+    <h2><span class="num">00</span> No instrument required</h2>
+    <p class="sub">
+      The repository ships with two <b>virtual instruments</b> — a bench digital multimeter
+      and a digital storage oscilloscope — that speak real SCPI over a real TCP socket.
+      Each has a front panel with a live traffic log, so you can watch every byte your code
+      sends and receives. The code you write against them is the code you would run against
+      hardware; only the resource string changes.
+    </p>
+    <div class="pills">
+      <span class="pill">numpy</span><span class="pill">pandas</span>
+      <span class="pill">matplotlib</span><span class="pill">pysimplegui</span>
+      <span class="pill">pyserial</span><span class="pill">pyvisa</span>
+      <span class="pill">jupyterlab</span>
+    </div>
+  </div>
+</section>
+
+<section id="outcomes">
+  <div class="wrap">
+    <h2><span class="num">01</span> Learning outcomes</h2>
+    <p class="sub">By the end of the training, participants will be able to:</p>
+    <ol class="outcomes">
+      <li>Demonstrate an understanding of basic Python programming.</li>
+      <li>Use key Python libraries for numerical computation, data visualisation and data analysis.</li>
+      <li>Create basic graphical user interfaces with PySimpleGUI.</li>
+      <li>Connect to and control instruments using PySerial and PyVISA.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="schedule">
+  <div class="wrap">
+    <h2><span class="num">02</span> Schedule</h2>
+    <p class="sub">Two days, morning theory and afternoon practice, working straight from the notebooks.</p>
+    <div class="days">
+
+      <div class="day">
+        <header>
+          <div class="tag">Day 1</div>
+          <div class="ttl">Python and the scientific stack</div>
+        </header>
+        <ul>
+          <li><span class="topic">Python fundamentals</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Python%20Primer.ipynb">Python Primer.ipynb</a></span></li>
+          <li><span class="topic">Numerical computing</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/NumPy.ipynb">NumPy.ipynb</a></span></li>
+          <li><span class="topic">Plotting</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Matplotlib.ipynb">Matplotlib.ipynb</a></span></li>
+          <li><span class="topic">Data analysis</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Pandas.ipynb">Pandas.ipynb</a></span></li>
+          <li><span class="topic">Practice</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Exercises.ipynb">Exercises.ipynb</a></span></li>
+        </ul>
+      </div>
+
+      <div class="day">
+        <header>
+          <div class="tag">Day 2</div>
+          <div class="ttl">GUIs and instrument control</div>
+        </header>
+        <ul>
+          <li><span class="topic">GUI basics with PySimpleGUI</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_hello_world.py">gui_hello_world.py</a> ·
+            <a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_long_operation.py">gui_long_operation.py</a></span></li>
+          <li><span class="topic">Building an instrument front panel</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope.py">gui_oscilloscope.py</a> →
+            <a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope_complete.py">gui_oscilloscope_complete.py</a></span></li>
+          <li><span class="topic">Serial instrument control</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/PySerial_DMM.ipynb">PySerial_DMM.ipynb</a> +
+            <a href="https://github.com/wooihaw/pica_aug2026/blob/main/virtual_dmm.py">virtual_dmm.py</a></span></li>
+          <li><span class="topic">VISA instrument control</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/PyVISA_Scope.ipynb">PyVISA_Scope.ipynb</a> +
+            <a href="https://github.com/wooihaw/pica_aug2026/blob/main/virtual_scope.py">virtual_scope.py</a></span></li>
+          <li><span class="topic">Putting it together</span>
+            <span class="files"><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope_working.py">gui_oscilloscope_working.py</a></span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="wrap">
+    <h2><span class="num">03</span> Before you arrive</h2>
+    <p class="sub">
+      Please set up your laptop <b>before Day 1</b>. It takes about 10 minutes, most of it
+      downloading. Every step in the guide ends with a <b>Check</b> — run it and confirm the
+      result before moving on.
+    </p>
+    <ol class="steps">
+      <li><b>Read the setup guide.</b> Follow
+        <a href="https://github.com/wooihaw/pica_aug2026/blob/main/PYTHON_SETUP.md">PYTHON_SETUP.md</a>
+        — a step-by-step Windows walkthrough that installs <code>uv</code>, creates the project
+        environment and verifies Jupyter Lab. No prior Python installation is needed.</li>
+      <li><b>Get the files.</b> Clone the repository or download the ZIP.
+<pre>git clone https://github.com/wooihaw/pica_aug2026.git</pre></li>
+      <li><b>Install the dependencies.</b> The guide walks through this with <code>uv add</code>,
+        then verifies everything at once:
+<pre>uv run python -c "import pyvisa, numpy, pandas, matplotlib, serial, PySimpleGUI; print('all imports OK')"</pre></li>
+      <li><b>Start Jupyter Lab</b> and confirm the notebooks open.
+<pre>uv run jupyter lab</pre></li>
+    </ol>
+    <div class="note">
+      <strong>Work outside OneDrive.</strong> On most university and company laptops, Documents
+      and Desktop are redirected into OneDrive, which tries to sync the thousands of small files
+      in a virtual environment. Keep the project under <code>C:\Users\&lt;you&gt;\python_venv\</code>.
+    </div>
+  </div>
+</section>
+
+<section id="instruments">
+  <div class="wrap">
+    <h2><span class="num">04</span> Virtual instruments</h2>
+    <p class="sub">
+      Run these from a terminal — not from inside a notebook — and leave them running while
+      you work through the matching notebook. Put the front panel beside Jupyter so you can
+      watch the traffic log as your commands go out.
+    </p>
+<pre><span class="c"># Day 2, PySerial session</span>
+uv run python virtual_dmm.py
+
+<span class="c"># Day 2, PyVISA session</span>
+uv run python virtual_scope.py</pre>
+    <table class="tbl">
+      <tr>
+        <td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/virtual_dmm.py">virtual_dmm.py</a></code></td>
+        <td>A virtual bench multimeter in one file: signal source, instrument model, SCPI parser,
+          TCP server, and a front panel with a 7-segment display, function keys and a traffic log.
+          PySerial reaches it through <code>socket://127.0.0.1:5025</code>, which behaves exactly
+          like a real serial port. Options: <code>--headless</code>, <code>--port</code>,
+          <code>--host</code>, <code>-v</code>, <code>--strict</code>.</td>
+      </tr>
+      <tr>
+        <td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/virtual_scope.py">virtual_scope.py</a></code></td>
+        <td>A virtual 2-channel digital storage oscilloscope speaking SCPI over TCP, with a PyVISA
+          driver and a PySimpleGUI display layered on top — the layers talk over a real socket, not
+          by calling each other's functions. Address it as
+          <code>TCPIP0::127.0.0.1::5025::SOCKET</code>. Options: <code>--sim-only</code>,
+          <code>--no-sim</code>, <code>--resource</code>, <code>-v</code>.</td>
+      </tr>
+    </table>
+    <div class="note">
+      <strong>One at a time.</strong> Both simulators listen on port <code>5025</code>. Run only
+      one, or start the second with <code>--port 5030</code> and update the address in your notebook.
+    </div>
+  </div>
+</section>
+
+<section id="materials">
+  <div class="wrap">
+    <h2><span class="num">05</span> Materials</h2>
+    <p class="sub">Every notebook is meant to be edited, not read. Change a value, re-run the cell, see what breaks.</p>
+
+    <h3>Notebooks</h3>
+    <table class="tbl">
+      <tr><th>File</th><th>What it covers</th></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Python%20Primer.ipynb">Python Primer</a></code></td>
+        <td>Variables, conditionals, loops, strings, lists, slicing, list comprehensions, tuples,
+          dictionaries, file I/O, exception handling and functions.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/NumPy.ipynb">NumPy</a></code></td>
+        <td>Array creation, indexing and slicing, multi-dimensional arrays, random numbers,
+          element-wise operations, aggregation, sorting and linear algebra.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Matplotlib.ipynb">Matplotlib</a></code></td>
+        <td>Line plots, styling and annotation, scatter and bubble charts, histograms, bar and pie
+          charts, subplots, 3D surfaces and displaying images.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Pandas.ipynb">Pandas</a></code></td>
+        <td>Series and DataFrames, time-based indexing, resampling, missing data, reading CSV files,
+          <code>groupby</code>, descriptive statistics, and plotting straight from a DataFrame.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/Exercises.ipynb">Exercises</a></code></td>
+        <td>Seven graded exercises: chickens and rabbits by brute force and again by linear algebra,
+          temperature statistics with plain Python and with Pandas, average and RMS of a sinusoidal
+          waveform, current and power from logged data, and plotting a downloaded waveform.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/PySerial_DMM.ipynb">PySerial_DMM</a></code></td>
+        <td>Opening a port, line termination and timeouts, commands versus queries,
+          <code>*IDN?</code>, configuring a DC-volts measurement, logging 100 readings for mean and
+          standard deviation, and draining the error queue.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/PyVISA_Scope.ipynb">PyVISA_Scope</a></code></td>
+        <td>Resource manager and resource strings, checking the error queue, vertical and timebase
+          settings (and why you always read a setting back), automatic measurements, downloading a
+          waveform as an IEEE 488.2 block, and reading back what the front panel changed.</td></tr>
+    </table>
+
+    <h3>GUI scripts</h3>
+    <table class="tbl">
+      <tr><th>File</th><th>Description</th></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_hello_world.py">gui_hello_world.py</a></code></td>
+        <td>The smallest useful PySimpleGUI program, in the five sections every GUI script follows:
+          import, layout, window, event loop, close.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_long_operation.py">gui_long_operation.py</a></code></td>
+        <td>Why a long-running task freezes a GUI, and how threading keeps the window responsive.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope.py">gui_oscilloscope.py</a></code></td>
+        <td>Skeleton of an oscilloscope front panel, with the timebase controls and event handlers
+          left as <code>...</code> for participants to complete.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope_complete.py">gui_oscilloscope_complete.py</a></code></td>
+        <td>The finished panel. The Send button reports the settings in a popup — no instrument is
+          contacted yet.</td></tr>
+      <tr><td><code><a href="https://github.com/wooihaw/pica_aug2026/blob/main/gui_oscilloscope_working.py">gui_oscilloscope_working.py</a></code></td>
+        <td>The same panel wired to a real instrument through PyVISA: termination characters for
+          SOCKET resources, and <code>:SYSTem:ERRor?</code> checked after every command.</td></tr>
+    </table>
+
+    <h3>Datasets <span style="font-family:var(--mono);font-size:13px;color:var(--faint)">data/</span></h3>
+    <table class="tbl">
+      <tr><th>File</th><th>Description</th></tr>
+      <tr><td><code>Heathrow.txt</code></td>
+        <td>Monthly mean high temperatures at Heathrow Airport, Jan 1948 – Dec 2016. One value per
+          line, 828 rows. Exercises 3 and 4.</td></tr>
+      <tr><td><code>iris_data.csv</code></td>
+        <td>The classic iris dataset: 150 flowers, four measurements and a species label.</td></tr>
+      <tr><td><code>current_data.csv</code></td>
+        <td>Time and current, 41 samples. Exercise 6 — compute and plot power.</td></tr>
+      <tr><td><code>noisy_signal.csv</code></td>
+        <td>Time and a noisy signal, 201 samples. For filtering and smoothing practice.</td></tr>
+      <tr><td><code>scope_0.csv</code></td>
+        <td>A two-channel capture exported by a real oscilloscope, with the header rows the
+          instrument writes. 2000 samples.</td></tr>
+      <tr><td><code>waveform_data.csv</code></td>
+        <td>Time and voltage for a waveform downloaded over PyVISA, ~10,000 samples. Exercise 7.</td></tr>
+      <tr><td><code>waveform_data_new.csv</code></td>
+        <td>Written by the PyVISA notebook when you download a waveform yourself — so the file
+          above, which Exercise 7 works from, stays untouched.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="tips">
+  <div class="wrap">
+    <h2><span class="num">06</span> Working through the material</h2>
+    <ul class="sub" style="padding-left:20px">
+      <li>Run every cell yourself rather than reading the output.</li>
+      <li>On Day 2, keep the simulator's traffic log visible next to your code. Watching the bytes
+        go out and come back is most of what makes instrument control click.</li>
+      <li>When something silently does nothing, check the error queue with
+        <code>SYST:ERR?</code>. Instruments rarely complain out loud; they just drop the command.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Python for Instrument Control and Automation ·
+    <a href="https://github.com/wooihaw/pica_aug2026">github.com/wooihaw/pica_aug2026</a>
+  </div>
+</footer>
+
+</body>
+</html>
