@@ -1,0 +1,31 @@
+[project]
+name = "pica-lab"
+version = "0.1.0"
+description = "Python for Instrument Control and Automation"
+readme = "README.md"
+authors = [
+    { name = "wooihaw", email = "wooihaw.tan@gmail.com" }
+]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "matplotlib>=3.9",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyserial>=3.5",
+    "pysimplegui>=6",
+    "pyvisa>=1.14",
+    "pyvisa-py>=0.7.2",
+]
+
+[project.scripts]
+pica-lab = "pica_lab:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29",
+    "jupyterlab>=4.2",
+]
