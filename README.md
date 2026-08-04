@@ -55,6 +55,22 @@ Start Jupyter Lab with:
 uv run jupyter lab
 ```
 
+### Check your setup
+
+When the guide is done, run the checker from the training folder:
+
+```powershell
+uv run python check_setup.py
+```
+
+It verifies the Python version, every required package and its minimum version, that
+Tk is available for PySimpleGUI, that port 5025 is free for the simulators, and that
+NumPy, Pandas and Matplotlib actually work together on a sample waveform. Each line is
+marked `[ OK ]`, `[WARN]` or `[FAIL]`; a `[FAIL]` names the fix and matches a step in
+`PYTHON_SETUP.md`. Nothing is installed or changed — it only reports.
+
+Please run it **before Day 1** and bring the output if anything fails.
+
 ## Notebooks
 
 | File | What it covers |

@@ -291,6 +291,16 @@
 <pre>uv run python -c "import pyvisa, numpy, pandas, matplotlib, serial, PySimpleGUI; print('all imports OK')"</pre></li>
       <li><b>Start Jupyter Lab</b> and confirm the notebooks open.
 <pre>uv run jupyter lab</pre></li>
+      <li><b>Run the checker.</b>
+        <a href="https://github.com/wooihaw/pica_aug2026/blob/main/check_setup.py">check_setup.py</a>
+        verifies the Python version, every required package and its minimum version, that Tk is
+        available for PySimpleGUI, that port 5025 is free for the simulators, and that NumPy,
+        Pandas and Matplotlib work together on a sample waveform. It installs nothing — it only
+        reports.
+<pre>uv run python check_setup.py</pre>
+        Each line is marked <code>[ OK ]</code>, <code>[WARN]</code> or <code>[FAIL]</code>. A
+        <code>[FAIL]</code> names the fix and matches a step in the setup guide. Please run this
+        <b>before Day 1</b> and bring the output if anything fails.</li>
     </ol>
     <div class="note">
       <strong>Work outside OneDrive.</strong> On most university and company laptops, Documents
