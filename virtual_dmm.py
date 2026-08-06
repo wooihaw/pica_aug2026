@@ -3,10 +3,10 @@
 virtual_dmm.py - a complete digital-multimeter teaching rig in one file.
 
 Same shape as virtual_scope.py, but the wire protocol is *serial* rather than
-VISA, and the instrument is a bench multimeter rather than a scope:
+VISA, and the instrument is a Keysight 34461A rather than a scope:
 
     PART 1  SIGNAL SOURCE  the physical quantity hanging off the test leads
-    PART 2  INSTRUMENT     a virtual DMM: functions, ranges, NPLC, buffer
+    PART 2  INSTRUMENT     a virtual 34461A: functions, ranges, NPLC, buffer
     PART 3  SCPI PARSER    text in, text out - the part students will extend
     PART 4  SERIAL SERVER  the TCP endpoint that PySerial's socket:// dials
     PART 5  FRONT PANEL    PySimpleGUI: 7-segment display, function keys,
@@ -30,7 +30,7 @@ USB-to-serial adapter.  That is the whole point: the students' code is not
 written against the simulator, it is written against PySerial.
 
     Simulator :  serial_for_url("socket://127.0.0.1:5025", timeout=5)
-    Real DMM   : serial_for_url("COM4", baudrate=9600, timeout=5)
+    Real 34461A: serial_for_url("COM4", baudrate=9600, timeout=5)
 
 Baud rate, parity and flow control are ignored by the socket handler - there is
 no UART to configure.  Worth saying out loud in class, because it is the one
@@ -125,7 +125,7 @@ def eng(value, unit="", digits=4):
 
 
 def scpi_num(value):
-    """The instrument's number format: +5.00019000E+00.
+    """Keysight's number format: +5.00019000E+00.
 
     Nine significant figures, explicit sign, two-digit exponent.  Students who
     call float() on it never notice; students who try to parse it by hand
@@ -233,7 +233,7 @@ class Source:
 # key         : the canonical SCPI function name, as FUNCtion? reports it
 # label       : what the front panel prints
 # unit        : display unit
-# annun       : the small annunciator, as it appears on a real meter
+# annun       : the small annunciator, as it appears on a real 34461A
 # ranges      : selectable ranges, smallest first
 # fullscales  : what the source panel's "full scale" combo offers
 # bipolar     : may the quantity be negative
@@ -316,7 +316,7 @@ LEAD_RESISTANCE = 0.12
 LINE_FREQ = 50.0                       # Hz, for NPLC -> seconds
 NPLC_CHOICES = [0.02, 0.2, 1.0, 10.0, 100.0]
 NPLC_DIGITS = {0.02: 4.5, 0.2: 5.5, 1.0: 6.5, 10.0: 6.5, 100.0: 6.5}
-OVERLOAD = 9.9e37                      # the "not a valid reading" value
+OVERLOAD = 9.9e37                      # Keysight's "not a valid reading" value
 
 
 # ==========================================================================
@@ -324,7 +324,7 @@ OVERLOAD = 9.9e37                      # the "not a valid reading" value
 # ==========================================================================
 
 class SimDMM:
-    """State and measurement engine of a virtual DMM.
+    """State and measurement engine of a virtual 34461A.
 
     Everything the SCPI parser and the front panel touch lives here, guarded by
     one lock.  The front panel runs on the tkinter main thread, the parser runs
@@ -490,6 +490,21 @@ class SimDMM:
                 return r
         return FUNCTIONS[function]["ranges"][-1]
 
+    def step_range(self, function, delta):
+        """Move one range up or down, as the front-panel keys do.
+
+        Stepping ranges by hand always turns autoranging off - on a real
+        instrument too.  Asking for a specific range and asking the instrument
+        to choose are mutually exclusive requests.
+        """
+        ranges = FUNCTIONS[function]["ranges"]
+        try:
+            i = ranges.index(self.ranges[function])
+        except ValueError:
+            i = len(ranges) - 1
+        self.autorange[function] = False
+        self.ranges[function] = ranges[max(0, min(len(ranges) - 1, i + delta))]
+
     def set_resolution(self, function, resolution):
         """Pick the NPLC that gets closest to the requested resolution."""
         if isinstance(resolution, str) or resolution <= 0:
@@ -601,7 +616,7 @@ class SimDMM:
 # read it top to bottom and add a command in four lines - which is the point.
 
 class ScpiError(Exception):
-    """Raised with a SCPI-style '-113,"Undefined header"' payload."""
+    """Raised with a Keysight-style '-113,"Undefined header"' payload."""
 
 
 # Long form -> canonical short form.  SCPI lets a client send either, plus any
@@ -922,7 +937,7 @@ def _sense(dmm, function, tail, query, args):
 
 
 def _simulate(dmm, parts, query, args):
-    """SIMulate:<function>:<parameter> - not a real instrument command."""
+    """SIMulate:<function>:<parameter> - not a real 34461A command."""
     function, tail = _split_function(parts)
     if function is None:
         raise ScpiError(f'-113,"Undefined header: SIM:{":".join(parts)}"')
@@ -1078,7 +1093,7 @@ def start_server(dmm, host, port, verbose=False):
 #
 # 2. The seven-segment display is erased and redrawn wholesale at 6 Hz.  That
 #    is about 60 canvas polygons per frame, which tkinter handles comfortably,
-#    and 6 Hz is roughly the reading rate of a real meter at NPLC 1 anyway.
+#    and 6 Hz is roughly the reading rate of a real 34461A at NPLC 1 anyway.
 
 BG = "#0d1117"
 PANEL = "#161b22"
@@ -1097,7 +1112,7 @@ DISP_W, DISP_H = 640, 190
 REFRESH_HZ = 6
 LEVEL_TICKS = 1000          # slider travel, in permille of 1.2 x full scale
 
-# The function keys under the display, in the order a real meter has them.
+# The function keys under the display, in the order a real 34461A has them.
 FUNC_BUTTONS = [
     ("DCV", "VOLT"), ("ACV", "VOLT:AC"), ("DCI", "CURR"), ("ACI", "CURR:AC"),
     ("2WΩ", "RES"), ("4WΩ", "FRES"),
@@ -1186,6 +1201,7 @@ class DmmPanel:
         self.host, self.port = host, port
         self.source_key = "VOLT"
         self.last_function = None
+        self.shown_auto = None
         self.log_paused = False
         self.log_lines = []
         self.last_event_t = None
@@ -1225,8 +1241,8 @@ class DmmPanel:
                     **{**ann, "font": ("Courier", 11, "bold")}),
         ]
 
-        # The function keys, the same ones that are under the display on a
-        # real meter.  They set exactly the state CONFigure sets, so pressing DCV
+        # The function keys, the same ones that are under the display on a real
+        # 34461A.  They set exactly the state CONFigure sets, so pressing DCV
         # here and sending CONF:VOLT:DC from a notebook are the same action -
         # which is the point worth making when a student asks what the front
         # panel is "really" doing.
@@ -1234,9 +1250,19 @@ class DmmPanel:
             return sg.Button(label, key=f"-F-{function}-", size=(6, 1),
                              font=("Helvetica", 9), pad=(2, 2))
 
+        def rkey(label, key, width=7):
+            return sg.Button(label, key=key, size=(width, 1),
+                             font=("Helvetica", 9), pad=(2, 2))
+
         keypad = [
             [fkey(lab, fn) for lab, fn in FUNC_BUTTONS[:6]],
             [fkey(lab, fn) for lab, fn in FUNC_BUTTONS[6:]],
+            [sg.Text("range", size=(6, 1), text_color=MUTED, font=("Helvetica", 9),
+                     background_color=PANEL),
+             rkey("- down", "-R-DOWN-"), rkey("up +", "-R-UP-"),
+             rkey("AUTO", "-R-AUTO-"),
+             sg.Text("(the meter's range, not the source's)", text_color=MUTED,
+                     font=("Helvetica", 8), background_color=PANEL)],
         ]
 
         truth = [
@@ -1270,7 +1296,12 @@ class DmmPanel:
                       default_value=FUNCTIONS["VOLT"]["label"],
                       key="-SRC-", size=(16, 1), readonly=True,
                       enable_events=True),
-             sg.Text("full scale", text_color=MUTED, background_color=PANEL),
+             # Called "slider span" and not "range" on purpose.  This sets how
+             # far the Level slider below travels; it is a property of the
+             # thing under test.  The meter's measurement range is the RANGE
+             # annunciator on the instrument panel and the keys under it.
+             # Two controls on one window both called "range" is a trap.
+             sg.Text("slider span", text_color=MUTED, background_color=PANEL),
              sg.Combo([], key="-FS-", size=(12, 1), readonly=True,
                       enable_events=True)],
 
@@ -1339,7 +1370,7 @@ class DmmPanel:
                              background_color=BG)],
                   [log]]
         self.window = sg.Window(
-            f"Virtual DMM  —  socket://{self.host}:{self.port}",
+            f"Virtual 34461A  —  socket://{self.host}:{self.port}",
             layout, background_color=BG, finalize=True, resizable=True)
         window = self.window
 
@@ -1538,6 +1569,10 @@ class DmmPanel:
         w["-A-FUNC-"].update(spec["annun"])
         w["-A-AUTO-"].update("AUTO" if auto else "MAN",
                              text_color=WARN if auto else FG)
+        if auto != self.shown_auto:
+            self.shown_auto = auto
+            w["-R-AUTO-"].update(button_color=FUNC_BTN_ON if auto
+                                 else FUNC_BTN_OFF)
         w["-A-RANGE-"].update(f"RANGE {eng(rng, spec['unit'])}")
         w["-A-NPLC-"].update(f"NPLC {nplc:g}" if spec["nplc"] else "NPLC  -")
         w["-A-DIG-"].update(f"{int(digits)}½ DIGITS")
@@ -1620,6 +1655,23 @@ class DmmPanel:
             self.window[f"-F-{key}-"].update(
                 button_color=FUNC_BTN_ON if key == function else FUNC_BTN_OFF)
 
+    def handle_range_key(self, event):
+        """The range keys.  Identical to sending RANGe or RANGe:AUTO."""
+        dmm = self.dmm
+        with dmm.lock:
+            function = dmm.function
+            if event == "-R-AUTO-":
+                dmm.autorange[function] = True
+                what = f"{function}:RANG:AUTO ON"
+            else:
+                dmm.step_range(function, 1 if event == "-R-UP-" else -1)
+                what = f"{function}:RANG {dmm.ranges[function]:g}"
+            auto = dmm.autorange[function]
+            rng = dmm.ranges[function]
+        self.append_log("--", f"front panel: range {eng(rng, FUNCTIONS[function]['unit'])}"
+                              f"{' auto' if auto else ' manual'}  (same as {what})",
+                        MUTED)
+
     # ------------------------------------------------------------------
     # main loop
     # ------------------------------------------------------------------
@@ -1643,6 +1695,8 @@ class DmmPanel:
                 self.save_log()
             elif isinstance(event, str) and event.startswith("-F-"):
                 self.select_function(event[3:-1])
+            elif event in ("-R-UP-", "-R-DOWN-", "-R-AUTO-"):
+                self.handle_range_key(event)
             elif event != sg.TIMEOUT_KEY:
                 self.handle_source_event(event, values)
 
@@ -1681,7 +1735,7 @@ class DmmPanel:
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Virtual bench multimeter on a PySerial socket:// endpoint")
+        description="Virtual Keysight 34461A on a PySerial socket:// endpoint")
     ap.add_argument("--host", default="127.0.0.1",
                     help="interface to listen on (default 127.0.0.1; use "
                          "0.0.0.0 to let the room connect)")
