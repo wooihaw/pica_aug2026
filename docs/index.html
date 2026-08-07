@@ -280,32 +280,57 @@
       result before moving on.
     </p>
     <ol class="steps">
-      <li><b>Read the setup guide.</b> Follow
-        <a href="https://github.com/wooihaw/pica_aug2026/blob/main/PYTHON_SETUP.md">PYTHON_SETUP.md</a>
-        — a step-by-step Windows walkthrough that installs <code>uv</code>, creates the project
-        environment and verifies Jupyter Lab. No prior Python installation is needed.</li>
-      <li><b>Get the files.</b> Clone the repository or download the ZIP.
-<pre>git clone https://github.com/wooihaw/pica_aug2026.git</pre></li>
-      <li><b>Install the dependencies.</b> The guide walks through this with <code>uv add</code>,
-        then verifies everything at once:
-<pre>uv run python -c "import pyvisa, numpy, pandas, matplotlib, serial, PySimpleGUI; print('all imports OK')"</pre></li>
-      <li><b>Start Jupyter Lab</b> and confirm the notebooks open.
-<pre>uv run jupyter lab</pre></li>
-      <li><b>Run the checker.</b>
+      <li><b>Install uv.</b> A single self-contained program — it does not need Python to already
+        be installed, and it manages its own Python without touching any existing installation.
+<pre><span class="c">Windows (PowerShell)</span>
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+<span class="c">macOS / Linux</span>
+curl -LsSf https://astral.sh/uv/install.sh | sh</pre>
+        Then <b>close the terminal completely and open a new one</b> — the installer adds
+        <code>uv</code> to your PATH and the current window cannot see that change. Confirm with
+        <code>uv --version</code>.</li>
+
+      <li><b>Get the files.</b> Clone the repository, or
+        <a href="https://github.com/wooihaw/pica_aug2026/archive/refs/heads/main.zip">download the ZIP</a>
+        and extract it.
+<pre>cd $HOME
+git clone https://github.com/wooihaw/pica_aug2026.git
+cd pica_aug2026</pre></li>
+
+      <li><b>Restore the environment.</b> One command. It reads <code>.python-version</code> and
+        fetches Python 3.13 if needed, creates <code>.venv</code>, and installs the exact versions
+        recorded in <code>uv.lock</code> — including Jupyter Lab from the <code>dev</code> group.
+        Roughly 400 MB, so this is the slow step.
+<pre>uv sync --group dev</pre>
+        There is nothing to activate. Every command from here starts with <code>uv run</code>.</li>
+
+      <li><b>Check your setup.</b>
         <a href="https://github.com/wooihaw/pica_aug2026/blob/main/check_setup.py">check_setup.py</a>
         verifies the Python version, every required package and its minimum version, that Tk is
         available for PySimpleGUI, that port 5025 is free for the simulators, and that NumPy,
         Pandas and Matplotlib work together on a sample waveform. It installs nothing — it only
         reports.
 <pre>uv run python check_setup.py</pre>
-        Each line is marked <code>[ OK ]</code>, <code>[WARN]</code> or <code>[FAIL]</code>. A
-        <code>[FAIL]</code> names the fix and matches a step in the setup guide. Please run this
-        <b>before Day 1</b> and bring the output if anything fails.</li>
+        Each line is marked <code>[ OK ]</code>, <code>[WARN]</code> or <code>[FAIL]</code>, and a
+        <code>[FAIL]</code> names the fix. Please run this <b>before Day 1</b> and bring the output
+        if anything fails.</li>
+
+      <li><b>Start Jupyter Lab</b> and confirm the notebooks open.
+<pre>uv run jupyter lab</pre></li>
     </ol>
     <div class="note">
       <strong>Work outside OneDrive.</strong> On most university and company laptops, Documents
       and Desktop are redirected into OneDrive, which tries to sync the thousands of small files
-      in a virtual environment. Keep the project under <code>C:\Users\&lt;you&gt;\python_venv\</code>.
+      in <code>.venv</code>. That makes installs crawl and can corrupt the environment outright.
+      Keep the folder somewhere under <code>C:\Users\&lt;you&gt;\</code> instead.
+    </div>
+    <div class="note">
+      <strong>Curious how it was built?</strong>
+      <a href="https://github.com/wooihaw/pica_aug2026/blob/main/PYTHON_SETUP.md">PYTHON_SETUP.md</a>
+      walks through creating the same environment from an empty folder — pinning Python, adding
+      each package with <code>uv add</code>, ending up with the <code>pyproject.toml</code> and
+      <code>uv.lock</code> already in the repository. Entirely optional.
     </div>
   </div>
 </section>

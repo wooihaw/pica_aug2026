@@ -42,34 +42,92 @@ By the end of the training, participants will be able to:
 
 ## Before you arrive
 
-Follow **[PYTHON_SETUP.md](PYTHON_SETUP.md)** — a step-by-step Windows guide that installs
-`uv`, creates the project environment and verifies Jupyter Lab. It takes about 10 minutes,
-mostly downloading. Every step ends with a **Check**; do not move on until it passes.
+The environment is fully described by three files in this repository — `pyproject.toml`
+(what the training needs), `uv.lock` (the exact versions) and `.python-version` (3.13) —
+so you do not have to install packages one by one. Four commands and you are done, about
+10 minutes, most of it downloading.
 
-Packages used: `numpy`, `pandas`, `matplotlib`, `pysimplegui>=6`, `pyserial`, `pyvisa`,
-`pyvisa-py`, plus `jupyterlab` and `ipykernel`.
+### 1. Install uv
 
-Start Jupyter Lab with:
+`uv` is a single self-contained program and does **not** need Python to already be
+installed. It downloads and manages its own Python, without touching any existing
+Python, Anaconda or Microsoft Store installation.
 
 ```powershell
-uv run jupyter lab
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Check your setup
+macOS or Linux:
 
-When the guide is done, run the checker from the training folder:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Then close your terminal completely and open a new one** — the installer adds `uv` to
+your PATH and the current window cannot see that change. This is the most common thing to
+go wrong. Confirm with:
+
+```powershell
+uv --version
+```
+
+### 2. Get the files
+
+```powershell
+cd $HOME
+git clone https://github.com/wooihaw/pica_aug2026.git
+cd pica_aug2026
+```
+
+No Git? Download the ZIP from the repository page and extract it. Keep the folder
+**outside OneDrive** — see the note below.
+
+### 3. Restore the environment
+
+```powershell
+uv sync --group dev
+```
+
+This reads `.python-version` and fetches Python 3.13 if you do not have it, creates
+`.venv`, and installs the exact versions recorded in `uv.lock` — `numpy`, `pandas`,
+`matplotlib`, `pysimplegui`, `pyserial`, `pyvisa` and `pyvisa-py`, plus `jupyterlab` and
+`ipykernel` from the `dev` group. Roughly 400 MB, so this is the step that takes a while.
+
+There is no environment to activate. Every command from here starts with `uv run`, which
+takes care of it.
+
+### 4. Check your setup
 
 ```powershell
 uv run python check_setup.py
 ```
 
-It verifies the Python version, every required package and its minimum version, that
-Tk is available for PySimpleGUI, that port 5025 is free for the simulators, and that
-NumPy, Pandas and Matplotlib actually work together on a sample waveform. Each line is
-marked `[ OK ]`, `[WARN]` or `[FAIL]`; a `[FAIL]` names the fix and matches a step in
-`PYTHON_SETUP.md`. Nothing is installed or changed — it only reports.
+`check_setup.py` verifies the Python version, every required package and its minimum
+version, that Tk is available for PySimpleGUI, that port 5025 is free for the simulators,
+and that NumPy, Pandas and Matplotlib work together on a sample waveform. Each line is
+marked `[ OK ]`, `[WARN]` or `[FAIL]`, and a `[FAIL]` names the fix. Nothing is installed
+or changed — it only reports.
 
 Please run it **before Day 1** and bring the output if anything fails.
+
+Then start Jupyter Lab:
+
+```powershell
+uv run jupyter lab
+```
+
+> **Keep the folder out of OneDrive.** On most university and company laptops, Documents
+> and Desktop are redirected into OneDrive, which tries to sync the thousands of small
+> files in `.venv`. That makes installs crawl and can corrupt the environment outright.
+> `C:\Users\<you>\` is not synced, so work there.
+
+### Building it yourself instead
+
+Prefer to see how the environment was put together? **[PYTHON_SETUP.md](PYTHON_SETUP.md)**
+walks through it from an empty folder — installing uv, pinning Python, adding each package
+with `uv add` and ending up with the same `pyproject.toml` and `uv.lock` you already have
+here. It is entirely optional, and useful mainly if you want to build environments like
+this for your own projects afterwards.
 
 ## Notebooks
 
